@@ -1,0 +1,187 @@
+#include <iostream>
+#include <string>
+using namespace std;
+
+class Order;
+
+class User {
+public:
+    void greet() { cout << "Welcome to QuickCommerce!\n"; }
+};
+
+class Customer : public User {
+    int id;
+    string name;
+public:
+    Customer(int i = 0, string n = "Guest") : id(i), name(n) {}
+    string getName() const { return name; }
+    int getId() const { return id; }
+    void show() {
+        cout << "Customer ID: " << id << ", Name: " << name << endl;
+    }
+    friend void showOrderSummary(const Customer&, const Order&);
+};
+
+class PrimeCustomer : public Customer {
+public:
+    PrimeCustomer(int id, string name) : Customer(id, name) {}
+    void perks() { cout << "Prime Benefits: Free delivery, priority packing, extra discounts.\n"; }
+};
+
+class Product {
+    int id;
+    string name;
+    int price;
+public:
+    Product(int i = 0, string n = "Unknown", int p = 50) : id(i), name(n), price(p) {}
+    int getPrice() { return price; }
+    string getName() { return name; }
+    void show() {
+        cout << "Product ID: " << id << " | " << name << " | Rs." << price << endl;
+    }
+};
+
+class Order {
+    int total;
+public:
+    Order(int t = 0) : total(t) {}
+    void addItem(int price = 50) { total += price; }
+    int getTotal() const { return total; }
+    friend void showOrderSummary(const Customer&, const Order&);
+};
+
+void showOrderSummary(const Customer& c, const Order& o) {
+    cout << "\n--- Order Summary ---\n";
+    cout << "Customer: " << c.name << "\nTotal Bill: Rs." << o.total << "\n";
+}
+
+class Discount {
+public:
+    int apply(int price, int percent) {
+        return price - (price * percent / 100);
+    }
+    int apply(int price, int percent, int cap) {
+        int d = (price * percent / 100);
+        if(d > cap) d = cap;
+        return price - d;
+    }
+};
+
+class Cart {
+    int items;
+public:
+    Cart(int i = 0) : items(i) {}
+    Cart operator++() { ++items; return *this; }
+    Cart operator+(const Cart& other) { return Cart(items + other.items); }
+    void show() { cout << "Items in cart: " << items << endl; }
+};
+
+class Tracker {
+    static int orders;
+public:
+    Tracker() { orders++; }
+    static void showOrders() {
+        cout << "Total Orders Placed: " << orders << endl;
+    }
+};
+int Tracker::orders = 0;
+
+class Warehouse {
+public:
+    void pack() { cout << "Packing items at warehouse...\n"; }
+};
+class DeliveryPartner {
+public:
+    void deliver() { cout << "Delivering order to customer...\n"; }
+};
+class LogisticsManager : public Warehouse, public DeliveryPartner {
+public:
+    void supervise() { cout << "Supervising logistics operations.\n"; }
+};
+
+int main() {
+    Customer cust1(301, "Dinesh");
+    PrimeCustomer prime1(302, "Rahul");
+
+    Product milk(1, "Milk", 40), bread(2, "Bread", 30), eggs(3, "Eggs", 70);
+    Order order1;
+    Cart c1(2), c2(1), c3;
+    Discount disc;
+
+    int choice;
+    do {
+        cout << "\n====== QuickCommerce Menu ======\n";
+        cout << "1. Show Customer\n";
+        cout << "2. Show Prime Customer\n";
+        cout << "3. Browse Products\n";
+        cout << "4. Add Product to Order\n";
+        cout << "5. View Cart\n";
+        cout << "6. Apply Discount\n";
+        cout << "7. Show Order Summary\n";
+        cout << "8. Logistics Demo\n";
+        cout << "9. Orders Tracker\n";
+        cout << "10. Exit\n";
+        cout << "Enter choice: ";
+        cin >> choice;
+
+        switch(choice) {
+            case 1:
+                cust1.greet();
+                cust1.show();
+                break;
+            case 2:
+                prime1.show();
+                prime1.perks();
+                break;
+            case 3:
+                milk.show();
+                bread.show();
+                eggs.show();
+                break;
+            case 4: {
+                int pid;
+                cout << "Enter Product ID to add: ";
+                cin >> pid;
+                if(pid == 1) order1.addItem(milk.getPrice());
+                else if(pid == 2) order1.addItem(bread.getPrice());
+                else if(pid == 3) order1.addItem(eggs.getPrice());
+                else order1.addItem();
+                cout << "Item added to order!\n";
+                Tracker t1;
+                break;
+            }
+            case 5:
+                ++c1;
+                c3 = c1 + c2;
+                c1.show();
+                c2.show();
+                c3.show();
+                break;
+            case 6: {
+                int finalAmt = disc.apply(order1.getTotal(), 15, 50);
+                cout << "After discount, amount = Rs." << finalAmt << endl;
+                break;
+            }
+            case 7:
+                showOrderSummary(cust1, order1);
+                break;
+            case 8: {
+                LogisticsManager lm;
+                lm.pack();
+                lm.deliver();
+                lm.supervise();
+                break;
+            }
+            case 9:
+                Tracker::showOrders();
+                break;
+            case 10:
+                cout << "Thank you for using QuickCommerce!\n";
+                break;
+            default:
+                cout << "Invalid choice. Try again.\n";
+        }
+    } while(choice != 10);
+
+    return 0;
+}
